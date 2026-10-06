@@ -127,30 +127,28 @@ export const SCHEMAS: Record<VisitType, FormSchema> = {
 export interface ExcelCell {
   key: string;
   label: string;
-  from: 'client' | 'visit' | 'data';
+  /** 'client' | 'visit' | 'data' — the source location of the value.
+   *  Optional because `ColumnDef.from` is optional (the registry always
+   *  sets it but the form-layer projection strips it). */
+  from?: 'client' | 'visit' | 'data';
+}
+
+/** Build an ExcelCell[] from SHEET_LAYOUTS columns.  Every entry in
+ *  SHEET_LAYOUTS has `from` set, so this is safe — we just help the
+ *  type checker see that. */
+function toExcelCells(layout: { columns: ColumnDef[] }): ExcelCell[] {
+  return layout.columns.map((c) => ({
+    key: c.key,
+    label: c.label,
+    from: c.from, // already typed as ColumnSource; readonly safe here
+  }));
 }
 
 export const EXCEL_COLUMNS: Record<VisitType, ExcelCell[]> = {
-  pre_marriage: SHEET_LAYOUTS.pre_marriage.columns.map((c) => ({
-    key: c.key,
-    label: c.label,
-    from: c.from === 'client' ? 'client' : c.from,
-  })),
-  children: SHEET_LAYOUTS.children.columns.map((c) => ({
-    key: c.key,
-    label: c.label,
-    from: c.from === 'client' ? 'client' : c.from,
-  })),
-  pregnancy: SHEET_LAYOUTS.pregnancy.columns.map((c) => ({
-    key: c.key,
-    label: c.label,
-    from: c.from === 'client' ? 'client' : c.from,
-  })),
-  family_planning: SHEET_LAYOUTS.family_planning.columns.map((c) => ({
-    key: c.key,
-    label: c.label,
-    from: c.from === 'client' ? 'client' : c.from,
-  })),
+  pre_marriage: toExcelCells(SHEET_LAYOUTS.pre_marriage),
+  children: toExcelCells(SHEET_LAYOUTS.children),
+  pregnancy: toExcelCells(SHEET_LAYOUTS.pregnancy),
+  family_planning: toExcelCells(SHEET_LAYOUTS.family_planning),
 };
 
 // =====================================================================
