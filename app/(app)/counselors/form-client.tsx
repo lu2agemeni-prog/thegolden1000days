@@ -139,22 +139,34 @@ export function CounselorForm({
             placeholder="01XXXXXXXXX"
           />
         </Field>
-        <Field label="البريد الإلكتروني">
+        <Field label="البريد الإلكتروني أو اسم المستخدم">
           <input
-            type="email"
+            type="text"
             className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
             value={form.email}
             onChange={(e) => set('email', e.target.value)}
+            placeholder="example@health.gov.eg أو nadaesawynm"
           />
         </Field>
         <Field label="التخصص">
           <input
             type="text"
+            list="specialty-suggestions"
             className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
             value={form.specialty}
             onChange={(e) => set('specialty', e.target.value)}
-            placeholder="طبيب / ممرضة / رائدة..."
+            placeholder="طبيب أسنان / طبيب بشري / أخصائي تمريض / رائدة..."
           />
+          <datalist id="specialty-suggestions">
+            <option value="طبيب أسنان" />
+            <option value="طبيبة بشرية - استشاري طب أسرة" />
+            <option value="أخصائية نساء وتوليد" />
+            <option value="أخصائية تمريض ومشورة رضاعة" />
+            <option value="رائدة ريفية صحية" />
+            <option value="طبيب أطفال" />
+            <option value="أخصائي تغذية علاجية" />
+            <option value="أخصائي نفسي / اجتماعي" />
+          </datalist>
         </Field>
       </div>
 

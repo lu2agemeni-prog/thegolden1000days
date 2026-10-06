@@ -79,6 +79,22 @@ const INITIAL_COUNSELORS: Counselor[] = [
     created_at: '2025-01-15T08:00:00.000Z',
     updated_at: '2025-01-15T08:00:00.000Z',
   },
+  {
+    id: 'db6b5189-9e0e-49cc-918c-ccaae07b66b5',
+    user_id: null,
+    full_name: 'ندى محمود عبدالعزيز ابراهيم',
+    national_id: '30010011709303',
+    phone: '01021348556',
+    email: 'nadaesawynm',
+    employee_code: '190',
+    specialty: 'طبيب أسنان',
+    work_days: '',
+    trainings: '',
+    is_active: true,
+    is_admin: false,
+    created_at: '2026-10-06T10:15:07.154Z',
+    updated_at: '2026-10-06T10:15:07.154Z',
+  },
 ];
 
 // Initial seed clients

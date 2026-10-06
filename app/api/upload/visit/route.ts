@@ -23,9 +23,16 @@ const VISIT_FIELDS_PHONE: Record<VisitType, string> = {
   family_planning: 'client_phone',
 };
 
+const UPLOAD_PASSWORD = process.env.UPLOAD_PASSWORD || '54321';
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+
+    if (body.password && body.password !== UPLOAD_PASSWORD) {
+      return NextResponse.json({ error: 'كلمة المرور غير صحيحة' }, { status: 401 });
+    }
+
     const {
       visit_type,
       national_id,

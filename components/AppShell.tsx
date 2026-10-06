@@ -30,7 +30,7 @@ const NAV: NavItem[] = [
   { href: '/visits/new',  label: 'زيارة جديدة',    icon: Stethoscope },
   { href: '/upload',      label: 'رفع ملف قديم',   icon: Upload },
   { href: '/reports',     label: 'التقارير',       icon: FileText },
-  { href: '/counselors',  label: 'المدخلين',       icon: Users, adminOnly: true },
+  { href: '/counselors',  label: 'المدخلين',       icon: Users },
 ];
 
 export function AppShell({
