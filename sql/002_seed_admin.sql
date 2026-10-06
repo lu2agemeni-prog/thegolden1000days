@@ -1,0 +1,23 @@
+-- =============================================================
+-- Seed the first admin
+-- =============================================================
+-- After you create the first auth user in Supabase Auth dashboard
+-- (Authentication > Users > Add user), copy its UUID and run:
+--
+--   update public.counselors
+--   set is_admin = true
+--   where user_id = 'PASTE-UUID-HERE';
+--
+-- Or insert directly if you have not created a counselor row yet:
+--
+--   insert into public.counselors (full_name, national_id, phone, email,
+--                                  employee_code, specialty, is_active, is_admin,
+--                                  user_id)
+--   values ('مدير النظام', '00000000000000', '01000000000',
+--           'admin@example.com', 'EMP-001', 'مدير', true, true,
+--           'PASTE-AUTH-USER-UUID-HERE');
+--
+-- The first signed-in user without an existing counselors row will not
+-- be able to do anything — you must grant the admin role manually as
+-- shown above.  This is intentional so strangers cannot self-promote.
+-- =============================================================
