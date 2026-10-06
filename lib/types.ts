@@ -1,3 +1,4 @@
+// app/lib/types.ts
 // =====================================================================
 // Domain types for the counseling data entry system
 // ---------------------------------------------------------------------
@@ -205,8 +206,9 @@ export interface Visit {
   visit_date: string | null;
   data: Record<string, unknown>;
   notes: string | null;
-  /** NEW: 'manual' | 'imported' | 'bulk' — see 001_schema.sql */
-  source: string;
+  /** 'manual' | 'imported' | 'bulk' — see 001_schema.sql.  Optional
+   *  for backward-compat with seed data; the DB has `default 'manual'`. */
+  source?: string;
   created_at: string;
   updated_at: string;
 }
