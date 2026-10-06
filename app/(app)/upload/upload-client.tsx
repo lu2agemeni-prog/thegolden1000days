@@ -386,10 +386,11 @@ function UploadBody({ counselors }: { counselors: Counselor[] }) {
             value={counselorId}
             onChange={(e) => setCounselorId(e.target.value)}
           >
-            <option value="">— اختر —</option>
+            <option value="">— اختر المدخل —</option>
             {counselors.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.full_name} {c.employee_code ? `(${c.employee_code})` : ''}
+                {!c.is_active ? ' [غير نشط]' : ''}
               </option>
             ))}
           </select>

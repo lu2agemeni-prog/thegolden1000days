@@ -7,7 +7,7 @@ export default async function UploadPage() {
   const session = await getSessionUser();
   if (!session) redirect('/login');
 
-  const counselors = await listCounselors();
+  const counselors = await listCounselors(true);
 
   return (
     <div className="space-y-6 max-w-5xl">
