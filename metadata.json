@@ -1,6 +1,0 @@
-{
-  "name": "Zip Studio - مستعرض ومحرر الملفات المضغوطة",
-  "description": "استعراض، استخراج، تعديل، ومعاينة محتويات ملفات ZIP فورا وبأمان فائق داخل المتصفح مع دعم كامل للغة العربية.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
