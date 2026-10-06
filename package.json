@@ -4,7 +4,7 @@
   "private": true,
   "description": "نظام إدخال بيانات غرف المشورة - Ministry of Health counseling data entry system",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3000 -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

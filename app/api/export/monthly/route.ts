@@ -63,7 +63,7 @@ export async function GET(req: Request) {
 
       // Set column labels (using AOA so we can set our own labels)
       const headerRow = cols.map((c) => c.label);
-      const aoa = [headerRow, ...rows.map((r) => cols.map((c) => r[c.key] ?? ''))];
+      const aoa = [headerRow, ...rows.map((r: Record<string, any>) => cols.map((c) => r[c.key] ?? ''))];
       const sheet2 = XLSX.utils.aoa_to_sheet(aoa);
 
       XLSX.utils.book_append_sheet(wb, sheet2, SHEET_INFO[type].slice(0, 31));

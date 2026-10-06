@@ -1,0 +1,8 @@
+{
+  "name": "نظام إدخال بيانات غرف المشورة",
+  "description": "نظام إلكتروني لإدخال بيانات عيادات المشورة - وزارة الصحة والسكان - الألف يوم الذهبية",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

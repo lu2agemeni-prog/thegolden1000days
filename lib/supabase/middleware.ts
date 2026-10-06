@@ -29,11 +29,17 @@ export async function updateSession(request: NextRequest) {
       },
     });
 
+    // IMPORTANT: do not run any other code that uses cookies after this point,
+    // because this will re-create the NextResponse and lose them.
+
+    // Use getSession() — it's lighter than getUser() and won't try to refresh
+    // tokens.  A refreshed session is more reliable in server components.
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
-    const publicPaths = ['/login', '/auth'];
+    // Public routes — login + auth callback.  Everything else requires login.
+    const publicPaths = ['/login', '/auth', '/api/template'];
     const isPublic = publicPaths.some((p) => request.nextUrl.pathname.startsWith(p));
 
     if (!user && !isPublic) {
@@ -45,6 +51,9 @@ export async function updateSession(request: NextRequest) {
 
     return response;
   } catch (err) {
+    // If anything in the middleware throws, log and let the request through
+    // (server components will handle the auth check).  This avoids
+    // MIDDLEWARE_INVOCATION_FAILED breaking the whole site.
     console.error('[middleware] error:', err);
     return response;
   }

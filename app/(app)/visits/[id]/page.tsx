@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { getSessionUser } from '@/lib/auth';
 import { getVisit } from '@/lib/queries';
 import { SCHEMAS, VISIT_TYPE_LABEL, VISIT_TYPE_SHORT, type VisitType } from '@/lib/types';
-import { Pencil, ArrowRight, FileDown, Printer } from 'lucide-react';
+import { Pencil, ArrowRight, FileDown } from 'lucide-react';
+import { PrintButton } from '@/components/PrintButton';
 
 export default async function VisitDetailPage({
   params,
@@ -47,14 +48,7 @@ export default async function VisitDetailPage({
               <FileDown size={14} />
               تصدير Excel
             </a>
-            <button
-              onClick={() => undefined}
-              className="bg-slate-600 hover:bg-slate-700 text-white px-4 py-2 rounded-md text-sm flex items-center gap-1"
-              formAction="javascript:window.print()"
-            >
-              <Printer size={14} />
-              طباعة
-            </button>
+            <PrintButton />
             <Link
               href="/visits"
               className="text-slate-500 hover:underline text-sm flex items-center gap-1"

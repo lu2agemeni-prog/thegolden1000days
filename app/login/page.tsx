@@ -117,6 +117,17 @@ function LoginForm() {
           <button
             type="button"
             onClick={() => {
+              setEmail('admin@health.gov.eg');
+              setPassword('123456');
+            }}
+            className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs py-2 rounded-md transition"
+          >
+            تعبئة بيانات التجربة (مدير النظام: admin@health.gov.eg)
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
               setMode(mode === 'signin' ? 'signup' : 'signin');
               setError(null);
             }}

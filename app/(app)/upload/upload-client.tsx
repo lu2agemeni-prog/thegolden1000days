@@ -1,8 +1,16 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import * as XLSX from 'xlsx';
-import { Upload, FileSpreadsheet, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
+import {
+  Upload,
+  FileSpreadsheet,
+  Loader2,
+  CheckCircle,
+  AlertTriangle,
+  Download,
+  Lock,
+} from 'lucide-react';
 import {
   EXCEL_COLUMNS,
   VISIT_TYPES,
@@ -51,6 +59,93 @@ const PHONE_COL: Record<VisitType, string> = {
 };
 
 export function UploadClient({ counselors }: { counselors: Counselor[] }) {
+  // ----- password gate -----
+  const [password, setPassword] = useState('');
+  const [authed, setAuthed] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authLoading, setAuthLoading] = useState(false);
+
+  async function verifyPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setAuthError(null);
+    setAuthLoading(true);
+    try {
+      const res = await fetch('/api/upload/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      if (res.ok) {
+        setAuthed(true);
+        // store the password in sessionStorage so we can re-send it on each
+        // upload call (defense in depth, server checks too)
+        sessionStorage.setItem('upload_pw', password);
+      } else {
+        const j = await res.json().catch(() => ({}));
+        setAuthError(j.error ?? 'كلمة المرور غير صحيحة');
+      }
+    } catch (err: any) {
+      setAuthError(err.message ?? 'فشل التحقق');
+    } finally {
+      setAuthLoading(false);
+    }
+  }
+
+  if (!authed) {
+    return (
+      <div className="max-w-md mx-auto bg-white border rounded-lg p-6 shadow-sm">
+        <div className="text-center mb-6">
+          <div className="inline-flex p-3 bg-primary-50 text-primary-600 rounded-full mb-3">
+            <Lock size={24} />
+          </div>
+          <h2 className="text-lg font-semibold text-slate-800">رفع ملف قديم</h2>
+          <p className="text-sm text-slate-500 mt-1">
+            هذه الصفحة محمية — أدخل كلمة المرور للمتابعة
+          </p>
+        </div>
+        <form onSubmit={verifyPassword} className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              كلمة المرور
+            </label>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+              placeholder="•••••"
+              autoFocus
+            />
+          </div>
+          {authError && (
+            <div className="bg-red-50 border border-red-200 text-red-800 p-2 rounded-md text-sm">
+              {authError}
+            </div>
+          )}
+          <button
+            type="submit"
+            disabled={authLoading}
+            className="w-full bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white font-semibold py-2.5 rounded-md flex items-center justify-center gap-2"
+          >
+            {authLoading ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                جارٍ التحقق...
+              </>
+            ) : (
+              'دخول'
+            )}
+          </button>
+        </form>
+      </div>
+    );
+  }
+
+  return <UploadBody counselors={counselors} />;
+}
+
+function UploadBody({ counselors }: { counselors: Counselor[] }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [parsed, setParsed] = useState<ParsedRow[]>([]);
@@ -71,7 +166,6 @@ export function UploadClient({ counselors }: { counselors: Counselor[] }) {
         return SHEET_TYPE_MAP[key];
       }
     }
-    // Fallback: match by English
     const lower = trimmed.toLowerCase();
     if (lower.includes('marriage') || lower.includes('زواج')) return 'pre_marriage';
     if (lower.includes('طفل') || lower.includes('children')) return 'children';
@@ -106,22 +200,11 @@ export function UploadClient({ counselors }: { counselors: Counselor[] }) {
         }
 
         const ws = wb.Sheets[sheetName];
-        const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, {
-          defval: '',
-          raw: false,
-        });
-
         const expectedCols = EXCEL_COLUMNS[type];
-        const colKeyToExcel: Record<string, string> = {};
-        const excelKeyToCol: Record<string, string> = {};
-        // First row of the Excel contains headers (row 1), but in the user's
-        // file the real headers are at row 3 (row1 is the title, row2 empty).
-        // Since sheet_to_json uses row 1 as headers, we work with the raw
-        // sheet to find correct columns.  For simplicity we extract by cell
-        // address using the actual Excel column letters.
+
         const cellHeaders: Record<string, string> = {};
         const range = XLSX.utils.decode_range(ws['!ref'] ?? 'A1');
-        for (let R = 0; R <= Math.min(range.s.r + 2, range.e.r); R++) {
+        for (let R = 0; R <= Math.min(range.s.r + 4, range.e.r); R++) {
           for (let C = range.s.c; C <= range.e.c; C++) {
             const addr = XLSX.utils.encode_cell({ r: R, c: C });
             const cell = ws[addr];
@@ -131,60 +214,39 @@ export function UploadClient({ counselors }: { counselors: Counselor[] }) {
           }
         }
 
-        // Find row containing "اسم" + "الرقم القومي" (row 4 or 5 in the user's file)
         const headerRowLetter: Record<string, string> = {};
-        const labelToCol: Record<string, string> = {};
-        // scan rows
-        Object.entries(cellHeaders).forEach(([addr, label]) => {
-          if (label) labelToCol[addr] = label.trim();
-        });
-
-        // Build mapping: for each expected column label, find the cell address
-        // whose value matches the label (or section header in row 3).
-        expectedCols.forEach((ec) => {
-          for (const [addr, label] of Object.entries(labelToCol)) {
-            if (label === ec.label) {
+        for (const ec of expectedCols) {
+          for (const [addr, label] of Object.entries(cellHeaders)) {
+            if (label && label.trim() === ec.label) {
               const colLetter = addr.replace(/\d+/g, '');
               headerRowLetter[ec.key] = colLetter;
-              excelKeyToCol[colLetter] = ec.key;
               break;
             }
           }
-        });
+        }
 
         if (Object.keys(headerRowLetter).length === 0) {
           errs.push(`شيت "${sheetName}" - لم نتمكن من العثور على عناوين الأعمدة`);
           continue;
         }
 
-        // data starts at the row AFTER the last header row in the file.
-        // The user's template has headers in rows 3-5; data begins at row 6.
         const dataStartRow = 6;
 
         for (let R = dataStartRow; R <= range.e.r + 1; R++) {
           const raw: Record<string, unknown> = {};
           let hasData = false;
-          expectedCols.forEach((ec) => {
+          for (const ec of expectedCols) {
             const col = headerRowLetter[ec.key];
-            if (!col) return;
+            if (!col) continue;
             const addr = `${col}${R}`;
             const cell = ws[addr];
             const v = cell ? String(cell.v ?? '').trim() : '';
             if (v) hasData = true;
             raw[ec.key] = v;
-          });
+          }
 
           if (!hasData) continue;
 
-          // Build visit_type-specific data payload
-          const data: Record<string, unknown> = {};
-          expectedCols.forEach((ec) => {
-            if (ec.from === 'data' && raw[ec.key]) {
-              data[ec.key] = raw[ec.key];
-            }
-          });
-
-          // Build client info
           const fullName = String(raw[NAME_COL[type]] ?? '').trim();
           const nationalId = String(raw[NID_COL[type]] ?? '').replace(/\D/g, '');
 
@@ -214,6 +276,12 @@ export function UploadClient({ counselors }: { counselors: Counselor[] }) {
     }
     if (parsed.length === 0) return;
 
+    const pw = sessionStorage.getItem('upload_pw') ?? '';
+    if (!pw) {
+      alert('انتهت صلاحية كلمة المرور، أعد تحميل الصفحة');
+      return;
+    }
+
     setBusy(true);
     setProgress({ done: 0, total: parsed.length, ok: 0, fail: 0 });
 
@@ -233,6 +301,7 @@ export function UploadClient({ counselors }: { counselors: Counselor[] }) {
             counselor_id: counselorId,
             raw_row: row.raw,
             data: buildData(row),
+            password: pw,
           }),
         });
         if (res.ok) ok++;
@@ -264,7 +333,6 @@ export function UploadClient({ counselors }: { counselors: Counselor[] }) {
     return out;
   }
 
-  // Group parsed by type for display
   const byType = parsed.reduce<Record<VisitType, number>>(
     (acc, p) => {
       acc[p.visit_type] = (acc[p.visit_type] ?? 0) + 1;
@@ -275,6 +343,26 @@ export function UploadClient({ counselors }: { counselors: Counselor[] }) {
 
   return (
     <div className="space-y-6">
+      {/* Download template banner */}
+      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <div className="font-semibold text-emerald-900 text-sm">
+            محتاج ملف جاهز للرفع؟
+          </div>
+          <div className="text-xs text-emerald-800 mt-1">
+            حمّل عينة Excel بالأعمدة الصحيحة، عبّي بياناتك، ثم ارفعها هنا.
+          </div>
+        </div>
+        <a
+          href="/api/template/download"
+          download
+          className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md text-sm font-semibold flex items-center gap-1"
+        >
+          <Download size={14} />
+          تحميل عينة Excel
+        </a>
+      </div>
+
       <div className="bg-white border rounded-lg p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-slate-800 mb-3">
           اختر ملف Excel
