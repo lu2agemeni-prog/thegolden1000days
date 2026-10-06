@@ -60,6 +60,14 @@ export type {
 };
 
 // =====================================================================
+// Backward-compat aliases
+// =====================================================================
+// The original types.ts had its own `FieldDef` interface; the rest of the
+// app (FieldInput, VisitForm, etc.) still imports it.  It's structurally
+// the same as `ColumnDef` (the canonical name in the registry).
+export type FieldDef = ColumnDef;
+
+// =====================================================================
 // Form schema (derived from the registry)
 // =====================================================================
 // The form renderer (VisitForm.tsx) used to read hard-coded SCHEMAS.

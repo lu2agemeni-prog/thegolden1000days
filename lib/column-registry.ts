@@ -63,8 +63,13 @@ export interface ColumnDef {
   key: string;
   /** Arabic label shown in Excel, forms, reports, exports. */
   label: string;
-  /** Where the value lives in the database. */
-  from: ColumnSource;
+  /**
+   * Where the value lives in the database.
+   * Optional for backward-compat with form code that only reads from SCHEMAS.
+   * Every entry in `SHEET_LAYOUTS` sets this — it's only absent on form
+   * projections that strip the `from` field.
+   */
+  from?: ColumnSource;
   /** Optional: section for the dynamic form renderer. */
   section?: string;
   /** Optional: visual width (1 = full row, 3 = 1/3 width). */
